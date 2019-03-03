@@ -2,7 +2,7 @@ StereoCam
 
 #Functioning
 
-Processes two images from two separate monocular cameras, calibrates images, and then uses those variables to recitfy and undistort inputted images 0_l.png and 0_r.png
+Processes two images from two separate monocular cameras, calibrates images, and then uses those variables to recitfy and undistort frame-by-frame live footage from each of the two cameras
 
 #To Run
 
