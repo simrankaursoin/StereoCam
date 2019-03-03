@@ -32,17 +32,23 @@ rightROI = tuple(calibration["rightROI"])
 
 REMAP_INTERPOLATION = cv2.INTER_AREA
 stereoMatcher = cv2.StereoBM_create()
-leftFrame = cv2.imread("0_l.png")
-rightFrame = cv2.imread("0_r.png")
+cap0 = cv2.VideoCapture(1)
+cap1 = cv2.VideoCapture(0)
+while cap0.isOpened() and cap1.isOpened():
+    ret0, frame0 = cap0.read()
+    ret1, frame1 = cap1.read()
+    frame0 = cv2.flip(frame0, -1)
+    frame1 = cv2.flip(frame1, -1)
+    leftFrame = frame0
+    rightFrame = frame1
 
-fixedLeft = cv2.remap(leftFrame, leftMapX, leftMapY, REMAP_INTERPOLATION)
-fixedRight = cv2.remap(rightFrame, rightMapX, rightMapY, REMAP_INTERPOLATION)
+    fixedLeft = cv2.remap(leftFrame, leftMapX, leftMapY, REMAP_INTERPOLATION)
+    fixedRight = cv2.remap(rightFrame, rightMapX, rightMapY, REMAP_INTERPOLATION)
 
-grayLeft = cv2.cvtColor(fixedLeft, cv2.COLOR_BGR2GRAY)
-grayRight = cv2.cvtColor(fixedRight, cv2.COLOR_BGR2GRAY)
-depth = stereoMatcher.compute(grayLeft, grayRight)
-DEPTH_VISUALIZATION_SCALE = 2048
-while True:
+    grayLeft = cv2.cvtColor(fixedLeft, cv2.COLOR_BGR2GRAY)
+    grayRight = cv2.cvtColor(fixedRight, cv2.COLOR_BGR2GRAY)
+    depth = stereoMatcher.compute(grayLeft, grayRight)
+    DEPTH_VISUALIZATION_SCALE = 2048
     cv2.imshow('depth', depth / DEPTH_VISUALIZATION_SCALE)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
