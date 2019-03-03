@@ -10,6 +10,8 @@ def video_to_frames(path1, path2):
     while vidcap.isOpened() and vidcap2.isOpened():
         success, image = vidcap.read()
         success2, image2 = vidcap2.read()
+        image = cv2.flip(image, -1)
+        image2 = cv2.flip(image2, -1)
         if success and success2:
             cv2.imwrite(os.path.join(path1, '%d.png') % count, image)
             cv2.imwrite(os.path.join(path2, '%d.png') % count, image2)
