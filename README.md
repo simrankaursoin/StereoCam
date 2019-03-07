@@ -2,7 +2,7 @@ StereoCam
 
 #Functioning
 
-Processes two images from two separate monocular cameras, calibrates images, and then uses those variables to recitfy and undistort frame-by-frame live footage from each of the two cameras
+Processes two images from two separate monocular cameras, calibrates images, and then uses those variables to recitfy and undistort frame-by-frame live footage from each of the two cameras and produce a single disparity map of the combined image.
 
 #To Run
 
