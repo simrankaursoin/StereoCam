@@ -1,37 +1,50 @@
-import numpy as np
-import cv2 as cv
+import cv2
+import numpy as np 
 import glob
-def calculate_error(image_name1, image_name2, calibrated_name):
-    # termination criteria
-    criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
-    # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
-    objp = np.zeros((np.prod(6*9), 3), np.float32)
-    objp[:,:2] = np.mgrid[0:9,0:6].T.reshape(-1,2)
-    # Arrays to store object points and image points from all the images.
-    objpoints = [] # 3d point in real world space
-    imgpoints = [] # 2d points in image plane.
-    images = glob.glob(image_name1)
-    for fname in images:
-        img = cv.imread(fname)
-        gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-        # Find the chess board corners
-        ret, corners = cv.findChessboardCorners(gray, (9,6), True)
-        # If found, add object points, image points (after refining them)
-        if ret == True:
-            objpoints.append(objp)
-            corners2 = cv.cornerSubPix(gray,corners, (11,11), (-1,-1), criteria)
-            imgpoints.append(corners.reshape(-1,2))
-            # Draw and display the corners
-            cv.drawChessboardCorners(img, (9,6), corners2, ret)
-            cv.imshow('img', img)
-            cv.waitKey(500)
-    cv.destroyAllWindows()
-    ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
-    img = cv.imread(image_name2)
-    h,  w = img.shape[:2]
-    newcameramtx, roi = cv.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
-    focal_length = (mtx[0][0], mtx[1][1])
+from tqdm import tqdm
+import PIL.ExifTags
+import PIL.Image
+def calculate_error(path):
+    chessboard_size = (9, 6)
+    calibration_paths = glob.glob(path)
+    obj_points = [] #3D points in real world space 
+    img_points = [] #3D points in image plane
+    #Prepare grid and points to display
+    objp = np.zeros((np.prod(chessboard_size),3),dtype=np.float32)
+    objp[:,:2] = np.mgrid[0:chessboard_size[0], 0:chessboard_size[1]].T.reshape(-1,2)
+    #Iterate over images to find intrinsic matrix
+    for image_path in tqdm(calibration_paths):
+    #Load image
+     image = cv2.imread(image_path)
+     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+     print("Image loaded, Analizying...")
+     #find chessboard corners
+     ret,corners = cv2.findChessboardCorners(gray_image, chessboard_size, None)
+    if ret == True:
+      print("Chessboard detected!")
+      print(image_path)
+      #define criteria for subpixel accuracy
+      criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+      #refine corner location (to subpixel accuracy) based on criteria.
+      cv2.cornerSubPix(gray_image, corners, (5,5), (-1,-1), criteria)
+      obj_points.append(objp)
+      img_points.append(corners)
+    #Calibrate camera
+    ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(obj_points, img_points,gray_image.shape[::-1], None, None)
+    h,  w = image.shape[:2]
+    newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
+    '''
+    exif_img = PIL.Image.open(calibration_paths[0])
+    exif_data = {
+     PIL.ExifTags.TAGS[k]:v
+     for k, v in exif_img._getexif().items()
+     if k in PIL.ExifTags.TAGS}
+    #Get focal length in tuple form
+    focal_length_exif = exif_data['FocalLength']
+    #Get focal length in decimal form
+    focal_length = focal_length_exif[0]/focal_length_exif[1]
+    '''
     INPUTARRAYMTX2 = mtx
     INPUTARRAYDISTCOEFFS2 = dist
     SIZE = (w,h)
-    return (INPUTARRAYMTX2, INPUTARRAYDISTCOEFFS2, SIZE, objpoints, imgpoints, focal_length)
+    return (INPUTARRAYMTX2, INPUTARRAYDISTCOEFFS2, SIZE, obj_points, img_points)
