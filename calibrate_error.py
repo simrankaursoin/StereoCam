@@ -17,12 +17,9 @@ def calculate_error(path):
     #Load image
      image = cv2.imread(image_path)
      gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-     print("Image loaded, Analizying...")
      #find chessboard corners
      ret,corners = cv2.findChessboardCorners(gray_image, chessboard_size, None)
     if ret == True:
-      print("Chessboard detected!")
-      print(image_path)
       #define criteria for subpixel accuracy
       criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
       #refine corner location (to subpixel accuracy) based on criteria.

@@ -36,12 +36,12 @@ num_disp = 112 - min_disp
 stereoMatcher = cv2.StereoBM_create(num_disp,17)
 stereoMatcher.setMinDisparity(min_disp)
 stereoMatcher.setBlockSize(17)
-stereoMatcher.setSpeckleRange(32)
+stereoMatcher.setSpeckleRange(20)
 stereoMatcher.setNumDisparities(num_disp)
 stereoMatcher.setDisp12MaxDiff(0)
 
 stereoMatcher.setUniquenessRatio(10)
-'''
+
 cap0 = cv2.VideoCapture(1)
 cap1 = cv2.VideoCapture(0)
 while cap0.isOpened() and cap1.isOpened():
@@ -51,22 +51,18 @@ while cap0.isOpened() and cap1.isOpened():
     frame1 = cv2.flip(frame1, -1)
     leftFrame = frame0
     rightFrame = frame1
-'''
-leftFrame = cv2.imread("0_l.png")
-rightFrame = cv2.imread("0_r.png")
+    fixedLeft = cv2.remap(leftFrame, leftMapX, leftMapY, REMAP_INTERPOLATION)
+    fixedRight = cv2.remap(rightFrame, rightMapX, rightMapY, REMAP_INTERPOLATION)
+    grayLeft = cv2.cvtColor(fixedLeft, cv2.COLOR_BGR2GRAY)
+    grayRight = cv2.cvtColor(fixedRight, cv2.COLOR_BGR2GRAY)
+    depth = stereoMatcher.compute(grayLeft, grayRight, cv2.CV_32F)
+    norm_coeff = 255/depth.max()
+    DEPTH_VISUALIZATION_SCALE = 2048
+    cv2.imshow('disparity', (depth*norm_coeff/255))
 
-
-fixedLeft = cv2.remap(leftFrame, leftMapX, leftMapY, REMAP_INTERPOLATION)
-fixedRight = cv2.remap(rightFrame, rightMapX, rightMapY, REMAP_INTERPOLATION)
-grayLeft = cv2.cvtColor(fixedLeft, cv2.COLOR_BGR2GRAY)
-grayRight = cv2.cvtColor(fixedRight, cv2.COLOR_BGR2GRAY)
-depth = stereoMatcher.compute(grayLeft, grayRight, cv2.CV_32F)
-norm_coeff = 255/depth.max()
-DEPTH_VISUALIZATION_SCALE = 2048
-cv2.imshow('disparity', (depth*norm_coeff/255))
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
 '''
-if cv2.waitKey(1) & 0xFF == ord('q'):
-    break
+    cv2.waitKey(9000)
+    cv2.destroyAllWindows()
 '''
-cv2.waitKey(9000)
-cv2.destroyAllWindows()
